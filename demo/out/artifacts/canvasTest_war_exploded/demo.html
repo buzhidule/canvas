@@ -225,7 +225,7 @@ canvas {
 					</div>
 					<div class="wrap">
 						<label for="guid"><input type="checkbox" name="guid"
-							id="guid" checked> 导航线</label>
+							id="guid"> 导航线</label>
 					</div>
 					<div class="wrap">
 						<label for="control"><input type="checkbox" name="control"
@@ -233,14 +233,18 @@ canvas {
 					</div>
 				</div>
 				<div class="block">
-					<div class="wrap">
+					<!--<div class="wrap">
 						<label >
 							<input type="checkbox" name="" id="text" onclick="checkedBoxs(this)"/> 输入文字
 						</label>
-					</div>
+					</div>-->
 					<div class="wrap">
 						<input type="radio" name="type" id="arrow" onclick="checkedButton()" >
 						<div class="label">箭头</div>
+					</div>
+					<div class="wrap">
+						<input type="radio" name="type" id="text">
+						<div class="label">文字</div>
 					</div>
 				</div>
 				<div class="block">
@@ -259,7 +263,7 @@ canvas {
 			<input type="hidden" id="textInput" name="textInput">
 			<canvas id='canvas' width="1000" height="600"></canvas>
 			<canvas id="tutorial2" width="1000" height="600" style="border:1px solid #000000;"></canvas>
-			<!--<textarea name="codes" class="codes" id="codes" cols="60" rows="40"></textarea>-->
+			<textarea name="codes" class="codes" id="codes" cols="60" rows="40"></textarea>
 		</div>
 		<input type="hidden" id="x" name="x">
 		<input type="hidden" id="y" name="y">
@@ -290,7 +294,6 @@ canvas {
 			isFill=document.getElementById('isFill').checked,
 			grid=document.getElementById('grid').checked,
 			guid=document.getElementById('guid').checked,
-            text=document.getElementById('text').checked,
 			control=document.getElementById('control').checked,
 			type='solid',
 			elems=document.getElementsByName('type');
@@ -310,7 +313,6 @@ canvas {
 			isFill:isFill,
 			grid:grid,
 			guid:guid,
-            text:text,
 			control:control
 		};
 	}
@@ -335,6 +337,7 @@ canvas {
 			case 'star': return new Star(pos);
 			case 'ellipse': return new Ellipse(pos);
             case 'arrow': return new Arrow(pos);
+			case 'text' : return new Text(pos);
 			default:return new Line(pos);
 		}
 	}
@@ -1183,6 +1186,78 @@ canvas {
         }
 	}
 
+
+
+	var textObj=null;
+	/*
+	* 文字
+	* */
+	class Text extends Graph{
+		constructor(pos){
+			super(pos);
+//			this.points=[pos,pos,pos,pos];
+			this.name='文字'
+            this.inputText();
+		}
+        drawController(ctx){
+            //console.log("drawController")
+            this.inputText();
+        }
+        createCode(){
+            console.log("createCode")
+        }
+        initUpdate(start,end){
+            var x1=Math.round(start.x),
+                y1=Math.round(start.y),
+                x2=Math.round(end.x),
+                y2=Math.round(end.y);
+            console.log("initUpdate")
+            //this.inputText();
+        }
+		inputText(){
+            if(document.getElementById('textInput').value == ""){
+				document.getElementById('textInput').type=text;
+				document.getElementById('textInput').style="position: absolute;z-index:9999;left:"+textObj.clientX+"px;top:"+textObj.clientY+"px;";
+	//            if(document.getElementById('x').value==''){
+					document.getElementById('x').value=Math.round(currPos.x);
+					document.getElementById('y').value=Math.round(currPos.y);
+	//            }
+				resetDrawType();
+				document.getElementById('textInput').onblur=function () {
+					//resetDrawType();
+					var text = document.getElementById('textInput').value;
+					document.getElementById('textInput').type = "hidden";
+					if (text.length > 0) {
+						var x = parseInt(document.getElementById('x').value);
+						var y = parseInt(document.getElementById('y').value);
+
+						//上横
+						context2.moveTo(x, y);
+						context2.lineTo(x + 100 + text.length * 12, y);
+
+						//左竖
+						context2.moveTo(x, y);
+						context2.lineTo(x, y + 30);
+						context2.font = "18px Georgia";
+						context2.fillText(text, x, y + 20);
+						//右竖
+						context2.moveTo(x + 100 + text.length * 12, y);
+						context2.lineTo(x + 100 + text.length * 12, y + 30);
+						//下横
+						context2.moveTo(x, y + 30);
+						context2.lineTo(x + 100 + text.length * 12, y + 30);
+
+						context2.stroke();
+
+					}
+					document.getElementById('x').value = "";
+					document.getElementById('y').value = "";
+					document.getElementById('textInput').value = "";
+				}
+            }
+		}
+	}
+
 	function inputText(e) {
         document.getElementById('textInput').type=text;
         document.getElementById('textInput').style="position: absolute;z-index:9999;left:"+e.clientX+"px;top:"+e.clientY+"px;";
@@ -1228,12 +1303,13 @@ canvas {
 		}
 	},false);
 	canvas.addEventListener('mousedown',function(e){
+        textObj=e;
 		mouseStart=WindowToCanvas(canvas,e.clientX,e.clientY);
 		env=getEnv();
 		activeShape=null;
-		if(env.text){
-            inputText(e);
-		}
+//		if(env.text){
+//            inputText(e);
+//		}
 
 		//新建图形
 		if(drawing){
