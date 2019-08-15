@@ -323,7 +323,6 @@ canvas {
 		}
 		drawing=false;
 	}
-
 	function factory(type,pos){
 		switch(type){
 			case 'line': return new Line(pos);
@@ -341,7 +340,6 @@ canvas {
 			default:return new Line(pos);
 		}
 	}
-
 	function checkedButton(_this){
 		document.getElementById('text').checked=false;
 	}
@@ -353,7 +351,6 @@ canvas {
 		}
 
 	}
-
 	class Graph{
 		constructor(pos){
 			this.x=pos.x;
@@ -478,7 +475,6 @@ canvas {
 			return codes.join('\n');
 		}
 	}
-
 	class Line extends Graph{
 		constructor(pos){
 			super(pos);
@@ -522,7 +518,6 @@ canvas {
 			return codes.join('\n');
 		}
 	}
-
 	class Dash extends Line{
 		constructor(pos){
 			super(pos);
@@ -577,7 +572,6 @@ canvas {
 			return codes.join('\n');
 		}
 	}
-
 	class Bezier extends Line {
 		constructor(pos){
 			super(pos);
@@ -637,7 +631,6 @@ canvas {
 			return codes.join('\n');
 		}
 	}
-
 	class Quadratic extends Line{
 		constructor(pos){
 			super(pos);
@@ -807,7 +800,6 @@ canvas {
 			this.drawCenter(ctx);
 		}
 	}
-
 	class Star extends Polygon{
 		constructor(pos){
 			super(pos);
@@ -886,7 +878,6 @@ canvas {
 		}
 
 	}
-
 	/**
 	 * 三角形
 	 */
@@ -1112,7 +1103,6 @@ canvas {
 			return codes.join('\n');
 		}
 	}
-
 	/*
 	* 箭头
 	* */
@@ -1185,9 +1175,6 @@ canvas {
             ctx.restore();
         }
 	}
-
-
-
 	var textObj=null;
 	/*
 	* 文字
@@ -1257,7 +1244,6 @@ canvas {
             }
 		}
 	}
-
 	function inputText(e) {
         document.getElementById('textInput').type=text;
         document.getElementById('textInput').style="position: absolute;z-index:9999;left:"+e.clientX+"px;top:"+e.clientY+"px;";
@@ -1296,7 +1282,6 @@ canvas {
             document.getElementById('y').value="";
         };
     }
-
 	document.getElementsByClassName('toolbar')[0].addEventListener('click',function(e){
 		if(e.target.getAttribute('type')=='radio'){
 			drawing=true;
@@ -1336,7 +1321,6 @@ canvas {
 		canvas.addEventListener('mousemove',mouseMove,false);
 		canvas.addEventListener('mouseup',mouseUp,false);
 	},false);
-
 	function mouseMove(e){
 
 		mouseEnd=WindowToCanvas(canvas,e.clientX,e.clientY);
@@ -1353,7 +1337,6 @@ canvas {
 		}
 		// restoreImageData();
 	}
-
 	function mouseUp(e){
         document.getElementById('text').checked=false;
 		canvas.style.cursor='pointer';
@@ -1378,14 +1361,12 @@ canvas {
 			}
 		}
 	};
-
 	canvas.addEventListener('mousemove',function(e){
 		currPos=WindowToCanvas(canvas,e.clientX,e.clientY);
 		currPos.x=Math.round(currPos.x);
 		currPos.y=Math.round(currPos.y);
 		showInfo(currPos);
 	},false);
-
 	document.getElementById('clear').onclick=function(){
 		shapes.length=0;
 		drawBG();
@@ -1422,7 +1403,6 @@ canvas {
             saveFile(canvas2.toDataURL("image/png"),'test.jpg');
         }
 	};
-
 	//下载方法
 	var saveFile = function(data, filename){
 		var save_link = document.createElementNS('http://www.w3.org/1999/xhtml', 'a');
@@ -1433,7 +1413,6 @@ canvas {
 		event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 		save_link.dispatchEvent(event);
 	}
-
 	document.getElementById('size').onchange=setValue;
 	document.getElementById('strokeColor').onchange=setValue;
 	document.getElementById('fillColor').onchange=setValue;

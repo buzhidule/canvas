@@ -152,7 +152,7 @@
     <![endif]-->
 </head>
 <body>
-<div class="content">
+<div class="content" >
     <div class="main grid">
         <div class="toolbar">
             <div class="block">
@@ -221,6 +221,8 @@
                 <button id='downLoad'>下载</button>
                 <button id='coordinateBtn'>所有坐标</button>
                 <button id='createDraws'>渲染图片</button>
+
+                <a download="canvas.jpg" href="<%=path%>/static/image/cancasImage.jpg"<%-- onclick="downloadpic(this);"--%>>下载图片</a>
             </div>
             <div class="block info-block">
                 <div class="info" id="pos">
@@ -229,10 +231,14 @@
             </div>
         </div>
 
-        <canvas id='canvas' width="1000" height="600"></canvas>
-        <canvas id="canvas2" width="1000" height="600" style="border:1px solid #000000;"></canvas>
-        <textarea name="codes" class="codes" id="codes" cols="60" rows="40"></textarea>
+        <canvas id='canvas' height="600" width="1000" ></canvas>
+        <canvas id="canvas2" height="600" width="1000" style="border:1px solid #000000;"></canvas>
+
+        <%--<textarea name="codes" class="codes" id="codes" cols="60" rows="40"></textarea>--%>
+
+        <canvas id='canvas3' class="hidden"  style="background: #fff;"></canvas>
     </div>
+
     <input type="hidden" id="x" name="x">
     <input type="hidden" id="y" name="y">
 </div>

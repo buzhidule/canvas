@@ -62,7 +62,6 @@ ul{
   margin: 10px 0;
 }
 .main{
-  height: calc(100% - 95px);
   overflow-y: auto;
   overflow-x: auto;
   text-align: center;

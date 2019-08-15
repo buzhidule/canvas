@@ -1,6 +1,10 @@
 /* canvas parems */
 var canvas2 = document.getElementById('canvas2');
 var context2 ;
+
+var canvas3 = document.getElementById('canvas3');
+var context3 = canvas3.getContext('2d');
+
 var canvas=document.getElementById('canvas'),
     ctx=canvas.getContext('2d'),
     W=canvas.width,
@@ -13,20 +17,80 @@ var canvas=document.getElementById('canvas'),
     imgData=null,
     index=-1,
     env=getEnv(),
-    shapes=[];
+    shapes=[],
+    canvasimg = new Image(),
+    canvasimgW=0,
+    canvasimgh=0
+;   // 创建一个<img>元素;
+var imgX = 0, imgY = 0, imgScale = 1;
+var MINIMUM_SCALE = 1.0 ,pos2={},posl={},dragging = false;
+
+
 /**
  * 初始化*/
 function canvasInit(_url){
     canvas.style.cursor='pointer';
-    drawBG();
+    //drawBG();
     if(canvas2!=null){
         context2 = canvas2.getContext("2d");
-        var img = new Image();   // 创建一个<img>元素
-        img.src = _url;
-        img.setAttribute("crossOrigin", 'Anonymous');
-        img.onload = function(){
-            context2.drawImage(img,0,0,canvas2.width,canvas2.height);
+        canvasimg.setAttribute("crossOrigin", 'anonymous');
+        canvasimg.onload = function(){
+            canvasimgW=canvasimg.width;
+            canvasimgh=canvasimg.height;
+
+            document.getElementById("canvas3").width=canvasimgW;
+            document.getElementById("canvas3").height=canvasimgh;
+
+
+            SetSize(canvasimg,500,200)
+            canvas2.height=canvasimg.height;
+            canvas2.width=canvasimg.width;
+            // document.getElementById('canvas').height=canvasimg.height;
+            // document.getElementById('canvas').width=canvasimg.width;
+            canvas.height=canvasimg.height;
+            canvas.width=canvasimg.width;
+
+            W=canvas.width;
+            H=canvas.height;
+            drawImages()
+
+            // context2.drawImage(canvasimg,0,0,canvasimg.width,canvasimg.height);
         }
+        canvasimg.src = _url;
+    }
+}
+/**
+ * 渲染图片*/
+function imagePut(_url){
+    canvas.style.cursor='pointer';
+    if(canvas2!=null){
+        canvasimg.setAttribute("crossOrigin", 'anonymous');
+        canvasimg.onload = function(){
+            SetSize(canvasimg,1000,600)
+            context2.drawImage(canvasimg,0,0,canvasimg.width,canvasimg.height);
+        }
+        canvasimg.src = _url;
+    }
+}
+
+//JS按比例缩放图片
+function SetSize(img, width, height) {
+    var vWidth=img.width;
+    var vHeight=img.height;
+    img.width=0;
+    img.height=0;
+    if(vWidth>vHeight){
+        img.width=width;
+        img.height=vHeight/vWidth*width;
+        img.style.marginTop=(height-img.height)/2;
+    }else if(vWidth<vHeight){
+        img.height=height;
+        img.width=vWidth/vHeight*height;
+        img.style.marginTop=0;
+    }else{
+        img.width=width;
+        img.height=height;
+        img.style.marginTop=0;
     }
 }
 /**
@@ -89,15 +153,6 @@ canvas.addEventListener('mousedown',function(e){
     mouseStart=WindowToCanvas(canvas,e.clientX,e.clientY);
     env=getEnv();
     activeShape=null;
-    /*if(env.type == "text"){
-        if($("#textInput").val() == ""){
-            drawing=false;
-            return ;
-        }else{
-            drawing=true;
-        }
-    }*/
-
     if(env.type == "text"){
         if(document.getElementById('textInput').value == ""){
             drawing=false;
@@ -132,14 +187,125 @@ canvas.addEventListener('mousedown',function(e){
     canvas.addEventListener('mouseup',mouseUp,false);
 },false);
 /**
-* 鼠标移动监听
-* */
+ * 鼠标移动监听
+ * */
 canvas.addEventListener('mousemove',function(e){
     currPos=WindowToCanvas(canvas,e.clientX,e.clientY);
     currPos.x=Math.round(currPos.x);
     currPos.y=Math.round(currPos.y);
     showInfo(currPos);
 },false);
+
+/**
+ * 鼠标滚轮事件*/
+function mouseWheel() {
+    /*canvas2.onmousedown = canvas.onmousedown = function (e) {
+        dragging = true;
+        pos2 = WindowToCanvas(canvas,e.clientX,e.clientY);  //坐标转换，将窗口坐标转换成canvas的坐标
+
+    };
+    canvas2.onmousemove = canvas.onmousemove = function (e) {  //移动
+        if(dragging){
+            posl = WindowToCanvas(canvas,e.clientX,e.clientY);
+            var x = posl.x - pos2.x, y = posl.y - pos2.y;
+            imgX  += x;
+            imgY  += y;
+            pos2 = JSON.parse(JSON.stringify(posl));
+            drawImage();  //重新绘制图片
+        }
+
+    };
+    canvas2.onmouseup = canvas.onmouseup = function () {
+        dragging = false;
+    };
+*/
+    canvas2.onmousewheel = canvas.onwheel = function (e) {    //滚轮放大缩小
+        var pos3 = WindowToCanvas(canvas,e.clientX,e.clientY);
+        e.wheelDelta = e.wheelDelta ? e.wheelDelta : (e.deltalY * (-40));  //获取当前鼠标的滚动情况
+        var newPos = {x: ((pos3.x - imgX) / imgScale).toFixed(2), y: ((pos3.y - imgY) / imgScale).toFixed(2)};
+        if (e.wheelDelta > 0) {// 放大
+            imgScale += 0.1;
+            imgX = (1 - imgScale) * newPos.x + (pos3.x - newPos.x);
+            imgY = (1 - imgScale) * newPos.y + (pos3.y - newPos.y);
+        } else {//  缩小
+            imgScale -= 0.1;
+            if (imgScale < MINIMUM_SCALE) {//最小缩放1
+                imgScale = MINIMUM_SCALE;
+            }
+            imgX = (1 - imgScale) * newPos.x + (pos3.x - newPos.x);
+            imgY = (1 - imgScale) * newPos.y + (pos3.y - newPos.y);
+            console.log(imgX, imgY);
+        }
+        context2.clearRect(0, 0, context2.width, context2.height);
+        drawImages();   //重新绘制图片
+
+        /*mouseWheelImg.setAttribute("crossOrigin",'anonymous');
+        if(mouseWheelImg.height == 0 && mouseWheelImg.width == 0 ){
+            mouseWheelImg.height = canvasimg.height;
+            mouseWheelImg.width = canvasimg.width
+        }
+        if (e.wheelDelta > 0) { //当滑轮向上滚动时
+            mouseWheelImg.height = mouseWheelImg.height + wheelNum;
+            mouseWheelImg.width = mouseWheelImg.width + wheelNum;
+        }
+        if (e.wheelDelta < 0) { //当滑轮向下滚动时
+            mouseWheelImg.height = mouseWheelImg.height - wheelNum;
+            mouseWheelImg.width = mouseWheelImg.width - wheelNum;
+        }
+        SetSize(mouseWheelImg,mouseWheelImg.width,mouseWheelImg.height)
+        mouseWheelImg.onload = function(){
+            context2.clearRect(0,0,canvas2.width,canvas2.height);
+
+            context2.drawImage(mouseWheelImg,0,0,mouseWheelImg.width,mouseWheelImg.height );
+            context2.translate(e.clientX,e.clientY);
+        }
+        mouseWheelImg.src = path+'/static/image/cancasImage.jpg'*/
+    }
+}
+function drawImages() {
+    console.log("imgScale:"+(1-imgScale))
+    // 保证  imgX  在  [img.width*(1-imgScale),0]   区间内
+    if(imgX<canvasimg.width*(1-imgScale)) {
+        imgX = canvasimg.width*(1-imgScale);
+    }else if(imgX>0) {
+        imgX=0
+    }
+    // 保证  imgY   在  [img.height*(1-imgScale),0]   区间内
+    if(imgY<canvasimg.height*(1-imgScale)) {
+        imgY = canvasimg.height*(1-imgScale);
+    }else if(imgY>0) {
+        imgY=0
+    }
+    console.log("canvasimg.width:"+canvasimg.width+"  canvasimg.height:"+canvasimg.height+"  imgX:"+imgX+"  imgY:"+imgY+"  ")
+    context2.drawImage(
+        canvasimg, //规定要使用的图像、画布或视频。
+        0, 0, //开始剪切的 x 坐标位置。
+        canvasimgW, canvasimgh,  //被剪切图像的高度。
+        imgX, imgY,//在画布上放置图像的 x 、y坐标位置。
+        canvasimg.width * imgScale, canvasimg.height * imgScale  //要使用的图像的宽度、高度
+    );
+
+    //选中控制点后拖拽修改图形
+    /*for(var i=0,len=shapes.length;i<len;i++){
+        canvas.style.cursor='crosshair';
+        var obj=shapes[i];
+        obj.x=obj.x-imgX;;
+        obj.y=obj.y-imgY;
+
+        activeShape=obj;
+        canvas.style.cursor='pointer';
+        if(activeShape){
+            drawBG();
+            drawGraph();
+            resetDrawType();
+        }
+
+    }*/
+
+}
+
+
+
 /**
  * 鼠标移动时出发*/
 function mouseMove(e){
@@ -244,6 +410,8 @@ function resetDrawType(){
     }
     drawing=false;
 }
+
+
 /**
  * 父类*/
 class Graph{
@@ -258,6 +426,9 @@ class Graph{
         this.strokeStyle='#f00';
         this.fillStyle='#f00';
         this.isFill=false;
+        this.type="";
+        this.imageWidth=canvasimg.width;
+        this.imageHeght=canvasimg.height;
     }
     /*修改坐标信息*/
     initUpdate(start,end){
@@ -407,6 +578,7 @@ class Line extends Graph{
         super(pos);
         this.points=[pos,pos];
         this.name='直线'
+        this.type="line"
     }
     /*中心点*/
     createPath(ctx){
@@ -457,6 +629,7 @@ class Triangle extends Graph{
         super(pos);
         this.points=[pos,pos,pos];
         this.name='三角形';
+        this.type="triangle";
     }
     initUpdate(start,end){
         var x1=Math.round(start.x),
@@ -479,6 +652,7 @@ class Rect extends Graph{
         super(pos);
         this.points=[pos,pos,pos,pos];
         this.name='矩形';
+        this.type="rect";
     }
     initUpdate(start,end){
         var x1=Math.round(start.x),
@@ -502,6 +676,7 @@ class Round extends Graph{
         this.points=[pos];
         this.radius=10;
         this.name='圆形';
+        this.type="round";
     }
     update(i,pos){
         if(i==9999){
@@ -551,6 +726,7 @@ class Ellipse extends Graph{
         this.a=0;
         this.b=0;
         this.name='椭圆形';
+        this.type="ellipse";
     }
     rotateA(){
         var x1=this.a*Math.cos(Math.PI/2),
@@ -631,7 +807,7 @@ class Ellipse extends Graph{
         }
         return -1
     }
-    draw(){
+    draw(ctx){
         ctx.save();
         ctx.lineWidth=this.lineWidth;
         ctx.strokeStyle=this.strokeStyle;
@@ -683,6 +859,7 @@ class Polygon extends Graph{
         super(pos);
         this.points=[pos];
         this.cPoints=[];
+        this.type="polygon";
     }
     get name(){
         return this.sides+'边形';
@@ -800,12 +977,13 @@ class Polygon extends Graph{
 }
 /**
  * 箭头
-	*/
+ */
 class Arrow extends Graph{
     constructor(pos){
         super(pos);
         this.points=[pos,pos];
-        this.name='箭头'
+        this.name='箭头';
+        this.type="arrow";
     }
     /*中心点*/
     createPath(ctx){
@@ -856,9 +1034,9 @@ class Arrow extends Graph{
         ctx.moveTo(arrowX, arrowY);
         //上箭头
         ctx.lineTo(toX, toY);
-         arrowX = toX + botX;
-         arrowY = toY + botY;
-         //下箭头
+        arrowX = toX + botX;
+        arrowY = toY + botY;
+        //下箭头
         ctx.lineTo(arrowX, arrowY);
 
         //不封口
@@ -883,10 +1061,7 @@ class Text extends Graph{
         this.sides=4;
         this.type="text";
         this.textValue='';
-    }
-    get name(){
-        this.sides=4;
-        return this.sides+'边形';
+        this.textCoordinate={x:0,y:0}
     }
     createPoints(start,end){
         var x1=Math.round(start.x),
@@ -1026,25 +1201,27 @@ class Text extends Graph{
                 ctx.lineTo(p.x,p.y);
             }
         });
-        ctx.font = this.strokeStyle;
+        ctx.fillStyle = this.strokeStyle;
         var str=this.textValue;
         var L=0.0;
         for(var i in str){
-            L+=(str.charCodeAt(i)>255)?1:0.5;
+            L+=(str.charCodeAt(i)>255)?1.3:0.8;
         }
         L=Math.ceil(L);
-        var font_size=Math.floor(Math.sqrt((this.points[1].x-startX)/2 * (this.points[3].y-startY)/2 /L ));
+        var font_size=Math.floor(Math.sqrt((this.points[1].x-startX)/1.5 * (this.points[3].y-startY)/2 /L ));
         ctx.font = ""+font_size+"px Georgia";
         ctx.fillText(str , startX , startY-((startY-this.points[3].y)*0.6));
-
-        ctx.closePath();
-        ctx.stroke();
+        this.textCoordinate.x=startX;
+        this.textCoordinate.y=startY-((startY-this.points[3].y)*0.6);
+       // ctx.closePath();
+       // ctx.stroke();
         ctx.restore();
     }
 }
+
 /**
-*下载方法
-*/
+ *下载方法
+ */
 var saveFile = function(data, filename){
     var save_link = document.createElementNS('http://www.w3.org/1999/xhtml', 'a');
     save_link.href = data;
@@ -1057,48 +1234,203 @@ var saveFile = function(data, filename){
 /**
  * 绘制图源*/
 function draws(_obj) {
-    ctx.save();
+    /*ctx.save();
     ctx.lineWidth=_obj.lineWidth;
     ctx.strokeStyle=_obj.strokeStyle;
     ctx.beginPath();
-    /*$.each(_obj.points,function(i,p){
-        if(i==0){
-            ctx.moveTo(p.x,p.y);
-        } else {
-            ctx.lineTo(p.x,p.y);
-        }
-    });*/
+    var o_height=600,o_width=1000;
+    var n_height=canvasimg.height,n_width=canvasimg.width;
+    var scale_x = 1-(n_width/o_width);
+    var scale_y = 1-(n_height/o_height);
+    console.log("scale_x:"+scale_x.toFixed(3)+"  scale_y:"+scale_y.toFixed(3));
+    var startX=0;
+    var startY=0;
     for(var i=0;i<_obj.points.length;i++){
         var p=_obj.points[i];
+        var x=p.x - ( p.x * scale_x);
+        var y=p.y - ( p.y * scale_y);
         if(i==0){
-            ctx.moveTo(p.x,p.y);
+            startX=x;
+            startY=y;
+           ctx.moveTo(x,y);
         } else {
-            ctx.lineTo(p.x,p.y);
+            ctx.lineTo(x,y);
         }
     }
     //判断是否存在文字信息
     if(_obj.textValue != null){
-        ctx.font = _obj.strokeStyle;
-        ctx.font = "25px Georgia";
-        ctx.fillText(_obj.textValue, _obj.points[0].x, _obj.points[0].y-((_obj.points[0].y-_obj.points[_obj.points.length-1].y)/2) );
+        var textX=_obj.textCoordinate.x - ( _obj.textCoordinate.x * scale_x);
+        var textY=_obj.textCoordinate.y - ( _obj.textCoordinate.y * scale_y);
+
+        var x=_obj.points[1].x - ( _obj.points[1].x * scale_x);
+        var y=_obj.points[3].y - ( _obj.points[3].y * scale_y);
+
+        var str=_obj.textValue;
+        var L=0.0;
+        for(var i in str){
+            L+=(str.charCodeAt(i)>255)?1:0.5;
+        }
+        L=Math.ceil(L);
+        var font_size=Math.floor(Math.sqrt((x-startX)/2 * (y-startY)/2 /L ));
+        ctx.font = ""+font_size+"px Georgia";
+        // ctx.font = _obj.strokeStyle;
+        // ctx.font = "18px Georgia";
+
+        ctx.fillText(
+            _obj.textValue,
+            textX,textY);
     }
     ctx.closePath();
     ctx.stroke();
-    ctx.restore();
+    ctx.restore();*/
+
+    var o_height=_obj.imageHeght,o_width=_obj.imageWidth;
+    var n_height=canvasimg.height,n_width=canvasimg.width;
+    var scale_x = 1-(n_width/o_width);
+    var scale_y = 1-(n_height/o_height);
+    for(var i=0;i<_obj.points.length;i++){
+        var p=_obj.points[i];
+        var x=p.x - ( p.x * scale_x);
+        var y=p.y - ( p.y * scale_y);
+        p.x=x;
+        p.y=y;
+    }
+    _obj.x=_obj.x - ( _obj.x * scale_x);
+    _obj.y=_obj.y - ( _obj.y * scale_y);
+
+    activeShape = factory(_obj.type,{x:_obj.x,y:_obj.y});
+    activeShape.lineWidth = _obj.lineWidth;
+    activeShape.strokeStyle = _obj.strokeStyle;
+    activeShape.sides = _obj.sides;
+    activeShape.points=_obj.points;
+
+    if(activeShape.angle != null){
+        _obj.a = _obj.a - ( _obj.a * scale_x);
+        _obj.b = _obj.b - ( _obj.b * scale_x);
+        activeShape.angle= _obj.angle;
+        activeShape.a=_obj.a;
+        activeShape.b=_obj.b;
+    }
+
+    if(_obj.radius != null){
+        activeShape.radius=_obj.radius;
+    }
+
+    if(_obj.cPoints!=null){
+        for(var i=0;i<_obj.cPoints.length;i++){
+            var p=_obj.cPoints[i];
+            var x=p.x - ( p.x * scale_x);
+            var y=p.y - ( p.y * scale_y);
+            p.x=x;
+            p.y=y;
+        }
+        activeShape.cPoints=_obj.cPoints;
+    }
+    //判断是否存在文字信息
+    if(_obj.textValue != null){
+        activeShape.textValue=_obj.textValue;
+    }
+    shapes.push(activeShape);
+    drawGraph();
+    canvas.addEventListener('mouseup',mouseUp,false);
+}
+
+/**
+ * 格式化图元*/
+function paresCoordinate(_obj,o_height,o_width,n_height,n_width) {
+    var o=JSON.parse(JSON.stringify(_obj));
+    var scale_x = 1-(n_width/o_width);
+    var scale_y = 1-(n_height/o_height);
+    for(var i=0;i<o.points.length;i++){
+        var p=o.points[i];
+        var x=p.x - ( p.x * scale_x);
+        var y=p.y - ( p.y * scale_y);
+        p.x=x;
+        p.y=y;
+    }
+    o.x=o.x - ( o.x * scale_x);
+    o.y=o.y - ( o.y * scale_y);
+
+    activeShape = factory(o.type,{x:o.x,y:o.y});
+    activeShape.lineWidth = o.lineWidth;
+    activeShape.strokeStyle = o.strokeStyle;
+    activeShape.sides = o.sides;
+    activeShape.points=o.points;
+
+    if(o.angle != null){
+        o.a = o.a - ( o.a * scale_x);
+        o.b = o.b - ( o.b * scale_x);
+        var angle = Math.atan2(o.points[0].y-o.y,o.points[0].x-o.x);
+        activeShape.angle= angle;
+        activeShape.a=o.a;
+        activeShape.b=o.b;
+    }
+
+    if(o.radius != null){
+        // .radius=Math.round(Math.sqrt(Math.pow(pos.x-this.x,2)+Math.pow(pos.y-this.y,2)));
+        activeShape.radius=Math.round(Math.sqrt(Math.pow(o.points[0].x-o.x,2)+Math.pow(o.points[0].y-o.y,2)));
+    }
+
+    if(_obj.cPoints!=null){
+        for(var i=0;i<o.cPoints.length;i++){
+            var p=o.cPoints[i];
+            var x=p.x - ( p.x * scale_x);
+            var y=p.y - ( p.y * scale_y);
+            p.x=x;
+            p.y=y;
+        }
+        activeShape.cPoints=o.cPoints;
+    }
+    //判断是否存在文字信息
+    if(o.textValue != null){
+        activeShape.textValue=o.textValue;
+    }
+    return activeShape;
 }
 $(function () {
     canvasInit(path+'/static/image/cancasImage.jpg');
-    $("#downLoad").on("click",function () {
+   // mouseWheel();
+    /*$("#downLoad").on("click",function () {
         var img = new Image();   // 创建一个<img>元素
-        img.src = canvas.toDataURL();//获取第一个画布元素
+        img.setAttribute("crossOrigin",'anonymous');
         img.onload = function(){
             //再将第一个画布的元素渲染到第二个画布
             context2.drawImage(img,0, 0);
+            console.log(canvas2.toDataURL("image/png"))
             //下载图片
             saveFile(canvas2.toDataURL("image/png"),'test.jpg');
+            context2.clearRect(0,0,W,H);
+            canvasimg = new Image();
+            imagePut(path+'/static/image/cancasImage.jpg');
         }
-        img.style.borderRadius='100px';
+        img.src = canvas.toDataURL();//获取第一个画布元素
     })
+*/
+    $("#downLoad").on("click",function () {
+        context3.clearRect(0, 0,canvasimgW,canvasimgh);
+        var img = new Image();   // 创建一个<img>元素
+        img.setAttribute("crossOrigin",'anonymous');
+        img.onload = function(){
+            //再将第一个画布的元素渲染到第二个画布
+            context3.drawImage(img,0, 0);
+            var shapesArray=[];
+            for(var index=0;index<shapes.length;index++){
+                var o=paresCoordinate(shapes[index],canvas2.width,canvas2.height,canvasimgW,canvasimgh);
+                shapesArray.push(o);
+            }
+            var showControl=false;
+            shapesArray.forEach(shape=>{
+                shape.draw(context3);
+                if(showControl){
+                    shape.drawController(context3);
+                }
+            });
+            //console.log(canvas3.toDataURL("image/jpg"))
+            //saveFile(canvas3.toDataURL("image/jpg"),'test.jpg');
+        }
+        img.src = path+'/static/image/cancasImage.jpg';//获取第一个画布元素
+    })
+
     $("#coordinateBtn").on("click",function () {
         $("#codes").empty();
         if(shapes.length>0){
@@ -1106,19 +1438,20 @@ $(function () {
         }
     });
     $("#createDraws").on("click",function () {
-        var _obj={};
-        _obj.lineWidth=3;
-        _obj.strokeStyle="#232eff"
-        _obj.textValue="这是一个测试用的信息！！";
-        var pointsList=[
-            {x:265,y:90},
-            {x:380,y:155},
-            {x:378,y:284},
-            {x:264,y:349},
-            {x:149,y:283},
-            {x:151,y:154}
-        ];
-        _obj.points=pointsList;
+        var _obj = {
+            "x": 383,
+            "y": 260,
+            "points": [{"x": 292, "y": 187}, {"x": 474, "y": 187}, {"x": 474, "y": 332}, {"x": 292, "y": 332}],
+            "sides": "5",
+            "lineWidth": "1",
+            "strokeStyle": "#ff0000",
+            "type": "text",
+            "imageWidth": 1000,
+            "imageHeght": 566,
+            "cPoints": [{"x": 534.9801664774918, "y": 380.58309966613353}],
+            "textValue": "1111111111",
+            "textCoordinate": {"x": 292, "y": 274}
+        };
         draws(_obj);
     });
 });

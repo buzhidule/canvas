@@ -7,6 +7,6 @@
     
     
     <welcome-file-list>
-        <welcome-file>canvasDemo.jsp</welcome-file>
+        <welcome-file>canvasDemo2.jsp</welcome-file>
     </welcome-file-list>
 </web-app>
